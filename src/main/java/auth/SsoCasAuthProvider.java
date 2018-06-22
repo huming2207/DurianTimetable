@@ -1,10 +1,14 @@
 package auth;
 
+import okhttp3.FormBody;
+
 /**
  * Authentication provider
  *
  */
 public interface SsoCasAuthProvider
 {
-    void performLogin();
+    String requestLoginPage();
+    boolean performLogin(FormBody loginForm);
+    boolean validateLoginToken();
 }
