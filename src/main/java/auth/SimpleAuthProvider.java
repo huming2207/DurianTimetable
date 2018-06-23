@@ -1,5 +1,6 @@
 package auth;
 
+import helpers.Constant;
 import okhttp3.*;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -34,61 +35,64 @@ public class SimpleAuthProvider implements SsoCasAuthProvider
     }
 
     @Override
-    public void performLogin()
+    public String requestLoginPage()
     {
         try {
             prop.load(new FileInputStream("app.properties"));
         } catch (IOException exception) {
             logger.error("Cannot load configuration file, reason comes below");
             logger.error(exception.getLocalizedMessage());
-            return;
+            return null;
         }
 
         // Build the request with the specified user agent
         Request request = new Request.Builder()
-                .url("https://sso-cas.rmit.edu.au/rmitcas/login")
+                .url(Constant.SSO_CAS_BASE_URL)
                 .addHeader("User-Agent", prop.getProperty("okhttp_ua"))
                 .build();
 
         // Grab the login page and have a look at the hidden attributes
-        httpClient.newCall(request).enqueue(new Callback()
-        {
-            @Override
-            public void onFailure(Call call, IOException e)
-            {
-                logger.error("OkHttp request failed");
-                logger.error(e.getLocalizedMessage());
-            }
+        try {
+            Response response = httpClient.newCall(request).execute();
+            if(!response.isSuccessful()) throw new IOException("Unexpected response received: " + response);
+            if(response.body() == null ||
+                    response.body().string().isEmpty()) throw new IOException("Empty body received: " + response);
 
-            @Override
-            public void onResponse(Call call, Response response) throws IOException
-            {
-                try(ResponseBody responseBody = response.body()) {
-                    if(!response.isSuccessful()) throw new IOException("Unexpected response returned: " + response);
-                    if (responseBody != null) {
-                        submitLoginForm(parseLoginForm(responseBody.string()), new Callback()
-                        {
-                            @Override
-                            public void onFailure(Call call, IOException e)
-                            {
-
-                            }
-
-                            @Override
-                            public void onResponse(Call call, Response response) throws IOException
-                            {
-
-                            }
-                        });
-                    } else {
-                        throw new IOException("Empty response: " + response);
-                    }
-                }
-            }
-        });
+            return response.body().string();
+        } catch (IOException e) {
+            logger.error(e.getMessage());
+            return null;
+        }
     }
 
-    private RequestBody parseLoginForm(String loginPageHtml)
+    @Override
+    public boolean performLogin(String loginPageHtml)
+    {
+        // Build the request
+        Request request = new Request.Builder()
+                .url(Constant.SSO_CAS_BASE_URL)
+                .addHeader("User-Agent", prop.getProperty(Constant.SETTING_KEY_USER_AGENT))
+                .post(this.parseLoginForm(loginPageHtml))
+                .build();
+
+        // Validate login status
+        return this.validateLoginPage(request);
+    }
+
+    @Override
+    public boolean validateLoginToken()
+    {
+        // Build the request
+        Request request = new Request.Builder()
+                .url(Constant.SSO_CAS_BASE_URL)
+                .addHeader("User-Agent", prop.getProperty(Constant.SETTING_KEY_USER_AGENT))
+                .build();
+
+        // Now validate the token
+        return this.validateLoginPage(request);
+    }
+
+    private FormBody parseLoginForm(String loginPageHtml)
     {
         Document loginPage = Jsoup.parse(loginPageHtml);
         Element loginForm = loginPage.selectFirst("form#fm1");
@@ -98,8 +102,8 @@ public class SimpleAuthProvider implements SsoCasAuthProvider
         FormBody.Builder formBuilder = new FormBody.Builder();
 
         // Add user ID and password into the form builder
-        formBuilder.add("username", prop.getProperty("username"));
-        formBuilder.add("password", prop.getProperty("password"));
+        formBuilder.add("username", prop.getProperty(Constant.SETTING_KEY_USERNAME));
+        formBuilder.add("password", prop.getProperty(Constant.SETTING_KEY_PASSWORD));
 
         // Add hidden values into it (e.g. "lt" and "execution")
         for(Element formElement : hiddenLoginParams) {
@@ -109,17 +113,17 @@ public class SimpleAuthProvider implements SsoCasAuthProvider
         return formBuilder.build();
     }
 
-    private void submitLoginForm(RequestBody formBody, Callback callback)
+    private boolean validateLoginPage(Request request)
     {
-        // Build the request
-        Request request = new Request.Builder()
-                .url("https://sso-cas.rmit.edu.au/rmitcas/login")
-                .addHeader("User-Agent", prop.getProperty("okhttp_ua"))
-                .post(formBody)
-                .build();
-
-
-        // Perform login request
-        httpClient.newCall(request).enqueue(callback);
+        try {
+            Response response = httpClient.newCall(request).execute();
+            if(!response.isSuccessful()) throw new IOException("Unexpected response received: " + response);
+            if(response.body() == null ||
+                    response.body().string().isEmpty()) throw new IOException("Empty body received: " + response);
+            return response.body().string().contains("Successful");
+        } catch (IOException e) {
+            logger.error(e.getMessage());
+            return false;
+        }
     }
 }
