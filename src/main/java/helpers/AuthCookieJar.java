@@ -1,4 +1,4 @@
-package auth;
+package helpers;
 
 import okhttp3.Cookie;
 import okhttp3.CookieJar;

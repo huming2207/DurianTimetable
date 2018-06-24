@@ -1,5 +1,6 @@
 package auth;
 
+import helpers.AuthCookieJar;
 import helpers.Constant;
 import okhttp3.*;
 import org.jsoup.Jsoup;
