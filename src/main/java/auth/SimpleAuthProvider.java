@@ -2,7 +2,11 @@ package auth;
 
 import helpers.AuthCookieJar;
 import helpers.Constant;
-import okhttp3.*;
+import helpers.HttpFetcher;
+import okhttp3.CookieJar;
+import okhttp3.FormBody;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -53,17 +57,7 @@ public class SimpleAuthProvider implements SsoCasAuthProvider
                 .build();
 
         // Grab the login page and have a look at the hidden attributes
-        try {
-            Response response = httpClient.newCall(request).execute();
-            if(!response.isSuccessful()) throw new IOException("Unexpected response received: " + response);
-            if(response.body() == null ||
-                    response.body().string().isEmpty()) throw new IOException("Empty body received: " + response);
-
-            return response.body().string();
-        } catch (IOException e) {
-            logger.error(e.getMessage());
-            return null;
-        }
+        return HttpFetcher.fetch(this.httpClient, request, this.logger);
     }
 
     @Override
@@ -116,15 +110,10 @@ public class SimpleAuthProvider implements SsoCasAuthProvider
 
     private boolean validateLoginPage(Request request)
     {
-        try {
-            Response response = httpClient.newCall(request).execute();
-            if(!response.isSuccessful()) throw new IOException("Unexpected response received: " + response);
-            if(response.body() == null ||
-                    response.body().string().isEmpty()) throw new IOException("Empty body received: " + response);
-            return response.body().string().contains("Successful");
-        } catch (IOException e) {
-            logger.error(e.getMessage());
-            return false;
-        }
+        String loginPage = HttpFetcher.fetch(this.httpClient, request, this.logger);
+        if(loginPage != null && !loginPage.isEmpty())
+            return loginPage.contains("Successful");
+        else
+            return false; // Login page is null or empty
     }
 }

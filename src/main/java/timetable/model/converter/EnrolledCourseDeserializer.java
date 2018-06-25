@@ -7,31 +7,31 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import timetable.model.enrolment.Activity;
-import timetable.model.enrolment.Course;
+import timetable.model.enrolment.EnrolledCourse;
 
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-public class CourseDeserializer extends StdDeserializer<Course>
+public class EnrolledCourseDeserializer extends StdDeserializer<EnrolledCourse>
 {
-    public CourseDeserializer()
+    public EnrolledCourseDeserializer()
     {
         this(null);
     }
 
-    public CourseDeserializer(Class<?> vc)
+    public EnrolledCourseDeserializer(Class<?> vc)
     {
         super(vc);
     }
 
     @Override
-    public Course deserialize(JsonParser jsonParser, DeserializationContext context)
+    public EnrolledCourse deserialize(JsonParser jsonParser, DeserializationContext context)
             throws IOException, JsonProcessingException
     {
         JsonNode rootNode = jsonParser.getCodec().readTree(jsonParser);
         ObjectMapper objectMapper = new ObjectMapper();
-        Course course = objectMapper.treeToValue(rootNode, Course.class);
+        EnrolledCourse enrolledCourse = objectMapper.treeToValue(rootNode, EnrolledCourse.class);
 
         // Parse the activity group "associative array", which is something like this:
         // {"groups": {"LEC01": {...(activity object)...}, "TUT01": {...(another activity object)...}}}
@@ -46,7 +46,7 @@ public class CourseDeserializer extends StdDeserializer<Course>
             }
         });
 
-        course.setActivities(activities);
-        return course;
+        enrolledCourse.setActivities(activities);
+        return enrolledCourse;
     }
 }
