@@ -7,9 +7,9 @@ import org.slf4j.Logger;
 
 import java.io.IOException;
 
-public class HttpFetcher
+public class HttpFetcherSync
 {
-    public static String fetch(OkHttpClient httpClient, Request request, Logger logger)
+    public static String performRequest(OkHttpClient httpClient, Request request, Logger logger)
     {
         try {
             Response response = httpClient.newCall(request).execute();

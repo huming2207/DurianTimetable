@@ -3,7 +3,7 @@ package timetable;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import helpers.Constant;
-import helpers.HttpFetcher;
+import helpers.HttpFetcherSync;
 import okhttp3.CookieJar;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -43,7 +43,7 @@ public class TimetableQuery
                 .addHeader("User-Agent", prop.getProperty(Constant.SETTING_KEY_USER_AGENT))
                 .build();
 
-        String allocatedCourseJson = HttpFetcher.fetch(this.httpClient, request, this.logger);
+        String allocatedCourseJson = HttpFetcherSync.performRequest(this.httpClient, request, this.logger);
         ObjectMapper objectMapper = new ObjectMapper();
 
         // Ask Jackson to deserialize the courses into Map<CourseNameInString, CourseObject>
@@ -63,7 +63,7 @@ public class TimetableQuery
                 .addHeader("User-Agent", prop.getProperty(Constant.SETTING_KEY_USER_AGENT))
                 .build();
 
-        String allocatedCourseJson = HttpFetcher.fetch(this.httpClient, request, this.logger);
+        String allocatedCourseJson = HttpFetcherSync.performRequest(this.httpClient, request, this.logger);
         ObjectMapper objectMapper = new ObjectMapper();
 
         // Ask Jackson to deserialize the courses into Map<CourseNameInString, CourseObject>

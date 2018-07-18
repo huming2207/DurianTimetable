@@ -2,7 +2,7 @@ package auth;
 
 import helpers.AuthCookieJar;
 import helpers.Constant;
-import helpers.HttpFetcher;
+import helpers.HttpFetcherSync;
 import okhttp3.CookieJar;
 import okhttp3.FormBody;
 import okhttp3.OkHttpClient;
@@ -21,9 +21,9 @@ import java.util.Properties;
 /**
  * Simple authentication provider
  *
- * It simulates the user login behaviour in the browser to get the tokens
+ * It simulates the user login behaviour in the browser to performRequest the tokens
  */
-public class SimpleAuthProvider implements SsoCasAuthProvider
+public class SimpleAuthProvider implements AuthProvider
 {
     private Properties prop = new Properties();
     private Logger logger = LoggerFactory.getLogger(this.getClass());
@@ -57,7 +57,7 @@ public class SimpleAuthProvider implements SsoCasAuthProvider
                 .build();
 
         // Grab the login page and have a look at the hidden attributes
-        return HttpFetcher.fetch(this.httpClient, request, this.logger);
+        return HttpFetcherSync.performRequest(this.httpClient, request, this.logger);
     }
 
     @Override
@@ -110,7 +110,7 @@ public class SimpleAuthProvider implements SsoCasAuthProvider
 
     private boolean validateLoginPage(Request request)
     {
-        String loginPage = HttpFetcher.fetch(this.httpClient, request, this.logger);
+        String loginPage = HttpFetcherSync.performRequest(this.httpClient, request, this.logger);
         if(loginPage != null && !loginPage.isEmpty())
             return loginPage.contains("Successful");
         else
