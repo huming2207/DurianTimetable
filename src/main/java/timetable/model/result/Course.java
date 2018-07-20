@@ -1,9 +1,4 @@
-package timetable.model.enrolment;
-
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
-
-import java.util.Map;
+package timetable.model.result;
 
 public interface Course
 {

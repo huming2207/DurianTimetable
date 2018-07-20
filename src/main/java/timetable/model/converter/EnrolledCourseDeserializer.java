@@ -6,8 +6,8 @@ import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
-import timetable.model.enrolment.Activity;
-import timetable.model.enrolment.EnrolledCourse;
+import timetable.model.result.Activity;
+import timetable.model.result.EnrolledCourse;
 
 import java.io.IOException;
 import java.util.HashMap;

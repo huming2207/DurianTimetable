@@ -1,4 +1,4 @@
-package timetable.model.enrolment;
+package timetable.model.result;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
