@@ -14,8 +14,7 @@ public class HttpFetcherSync
         try {
             Response response = httpClient.newCall(request).execute();
             if(!response.isSuccessful()) throw new IOException("Unexpected response received: " + response);
-            if(response.body() == null ||
-                    response.body().string().isEmpty()) throw new IOException("Empty body received: " + response);
+            if(response.body() == null) throw new IOException("Empty body received: " + response);
             return response.body().string();
         } catch (IOException e) {
             logger.error(e.getMessage());

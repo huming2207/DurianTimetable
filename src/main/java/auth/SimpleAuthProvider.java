@@ -23,7 +23,7 @@ import java.util.Properties;
  *
  * It simulates the user login behaviour in the browser to performRequest the tokens
  */
-public class SimpleAuthProvider implements AuthProvider
+public class SimpleAuthProvider
 {
     private Properties prop = new Properties();
     private Logger logger = LoggerFactory.getLogger(this.getClass());
@@ -39,7 +39,6 @@ public class SimpleAuthProvider implements AuthProvider
             .build();
     }
 
-    @Override
     public String requestLoginPage()
     {
         try {
@@ -60,7 +59,6 @@ public class SimpleAuthProvider implements AuthProvider
         return HttpFetcherSync.performRequest(this.httpClient, request, this.logger);
     }
 
-    @Override
     public boolean performLogin(String loginPageHtml)
     {
         // Build the request
@@ -74,7 +72,6 @@ public class SimpleAuthProvider implements AuthProvider
         return this.validateLoginPage(request);
     }
 
-    @Override
     public boolean validateLoginToken()
     {
         // Build the request
@@ -108,12 +105,28 @@ public class SimpleAuthProvider implements AuthProvider
         return formBuilder.build();
     }
 
+    /**
+     * There will be several possibilities for a certain login case:
+     *  - 1. Successful, server responses some info with "Login Successful"
+     *  - 2. Successful but password is gonna to be expired some days later, server says "Your password expires ** days"
+     *  - 3. Screwed, username/password was wrong
+     *  - 4. Screwed, no response, probably IT Service staffs are evacuating due to another false fire alarm goes off.
+     * @param request OKHttp Request object
+     * @return True if login is successful.
+     */
     private boolean validateLoginPage(Request request)
     {
         String loginPage = HttpFetcherSync.performRequest(this.httpClient, request, this.logger);
-        if(loginPage != null && !loginPage.isEmpty())
-            return loginPage.contains("Successful");
-        else
+
+        if(loginPage != null && !loginPage.isEmpty()) {
+            if(loginPage.contains("password expires")) {
+                logger.warn("Yo, your password is gonna to be expired! It's time to change your password!");
+                return true;
+            } else {
+                return loginPage.contains("Successful");
+            }
+        } else {
             return false; // Login page is null or empty
+        }
     }
 }
