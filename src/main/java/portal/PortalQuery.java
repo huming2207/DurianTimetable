@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import helpers.Constant;
 import helpers.HttpFetcherSync;
+import helpers.Settings;
 import okhttp3.CookieJar;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -15,12 +16,11 @@ import portal.exam.Exam;
 import portal.result.Result;
 
 import java.io.IOException;
-import java.util.Properties;
 
 public class PortalQuery
 {
     private String studentId;
-    private Properties prop = new Properties();
+    private Settings settings = Settings.getInstance();
     private Logger logger = LoggerFactory.getLogger(this.getClass());
     private OkHttpClient httpClient;
 
@@ -35,7 +35,7 @@ public class PortalQuery
         String queryUrl = String.format("%s%s", Constant.PORTAL_BASE_URL, endpoint);
         Request request = new Request.Builder()
                 .url(queryUrl)
-                .addHeader("User-Agent", prop.getProperty(Constant.SETTING_KEY_USER_AGENT))
+                .addHeader("User-Agent", settings.getSetting(Constant.SETTING_KEY_USER_AGENT))
                 .build();
 
         String responseJson = HttpFetcherSync.performRequest(this.httpClient, request, this.logger);

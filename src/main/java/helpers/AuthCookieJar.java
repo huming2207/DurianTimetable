@@ -44,4 +44,9 @@ public class AuthCookieJar implements CookieJar
         cookies.removeIf(cookie -> cookie.expiresAt() < System.currentTimeMillis());
         return cookies.stream().filter(cookie -> cookie.matches(url)).collect(Collectors.toList());
     }
+
+    public List<Cookie> getCookies()
+    {
+        return cookies;
+    }
 }

@@ -3,6 +3,7 @@ package auth;
 import helpers.AuthCookieJar;
 import helpers.Constant;
 import helpers.HttpFetcherSync;
+import helpers.Settings;
 import okhttp3.CookieJar;
 import okhttp3.FormBody;
 import okhttp3.OkHttpClient;
@@ -14,10 +15,6 @@ import org.jsoup.select.Elements;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.util.Properties;
-
 /**
  * Simple authentication provider
  *
@@ -25,7 +22,7 @@ import java.util.Properties;
  */
 public class SimpleAuthProvider
 {
-    private Properties prop = new Properties();
+    private Settings settings = Settings.getInstance();
     private Logger logger = LoggerFactory.getLogger(this.getClass());
 
     private OkHttpClient httpClient;
@@ -41,35 +38,35 @@ public class SimpleAuthProvider
 
     public String requestLoginPage()
     {
-        try {
-            prop.load(new FileInputStream("app.properties"));
-        } catch (IOException exception) {
-            logger.error("Cannot load configuration file, reason comes below");
-            logger.error(exception.getLocalizedMessage());
-            return null;
-        }
-
         // Build the request with the specified user agent
         Request request = new Request.Builder()
                 .url(Constant.SSO_CAS_BASE_URL)
-                .addHeader("User-Agent", prop.getProperty("okhttp_ua"))
+                .addHeader("User-Agent", settings.getSetting(Constant.SETTING_KEY_USER_AGENT))
                 .build();
 
         // Grab the login page and have a look at the hidden attributes
         return HttpFetcherSync.performRequest(this.httpClient, request, this.logger);
     }
 
-    public boolean performLogin(String loginPageHtml)
+    public boolean performLogin(String loginPageHtml, String username, String password)
     {
         // Build the request
         Request request = new Request.Builder()
                 .url(Constant.SSO_CAS_BASE_URL)
-                .addHeader("User-Agent", prop.getProperty(Constant.SETTING_KEY_USER_AGENT))
-                .post(this.parseLoginForm(loginPageHtml))
+                .addHeader("User-Agent", settings.getSetting(Constant.SETTING_KEY_USER_AGENT))
+                .post(this.parseLoginForm(loginPageHtml, username, password))
                 .build();
 
         // Validate login status
         return this.validateLoginPage(request);
+    }
+
+    public boolean performLogin(String loginPageHtml)
+    {
+        return this.performLogin(
+                loginPageHtml,
+                settings.getSetting(Constant.SETTING_KEY_USERNAME),
+                settings.getSetting(Constant.SETTING_KEY_PASSWORD));
     }
 
     public boolean validateLoginToken()
@@ -77,14 +74,14 @@ public class SimpleAuthProvider
         // Build the request
         Request request = new Request.Builder()
                 .url(Constant.SSO_CAS_BASE_URL)
-                .addHeader("User-Agent", prop.getProperty(Constant.SETTING_KEY_USER_AGENT))
+                .addHeader("User-Agent", settings.getSetting(Constant.SETTING_KEY_USER_AGENT))
                 .build();
 
         // Now validate the token
         return this.validateLoginPage(request);
     }
 
-    private FormBody parseLoginForm(String loginPageHtml)
+    private FormBody parseLoginForm(String loginPageHtml, String username, String password)
     {
         Document loginPage = Jsoup.parse(loginPageHtml);
         Element loginForm = loginPage.selectFirst("form#fm1");
@@ -94,11 +91,15 @@ public class SimpleAuthProvider
         FormBody.Builder formBuilder = new FormBody.Builder();
 
         // Add user ID and password into the form builder
-        formBuilder.add("username", prop.getProperty(Constant.SETTING_KEY_USERNAME));
-        formBuilder.add("password", prop.getProperty(Constant.SETTING_KEY_PASSWORD));
+        logger.info(String.format("Logging in with ID: %s...", username));
+        formBuilder.add("username", username);
+        formBuilder.add("password", password);
 
         // Add hidden values into it (e.g. "lt" and "execution")
         for(Element formElement : hiddenLoginParams) {
+            logger.info(String.format("Got hidden item name: %s, value: %s",
+                    formElement.attributes().get("name"),
+                    formElement.attributes().get("value")));
             formBuilder.add(formElement.attributes().get("name"), formElement.attributes().get("value"));
         }
 
