@@ -2,9 +2,10 @@ package timetable;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import helpers.AuthCookieJar;
 import helpers.Constant;
 import helpers.HttpFetcherSync;
-import okhttp3.CookieJar;
+import helpers.Settings;
 import okhttp3.FormBody;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -16,22 +17,21 @@ import timetable.model.result.PopupMessage;
 
 import java.io.IOException;
 import java.util.Map;
-import java.util.Properties;
 
 public class TimetableQuery
 {
     private String ssToken;
     private String studentId;
-    private Properties prop = new Properties();
     private Logger logger = LoggerFactory.getLogger(this.getClass());
+    private Settings settings = Settings.getInstance();
     private OkHttpClient httpClient;
 
-    public TimetableQuery(String studentId, String ssToken, CookieJar cookieJar)
+    public TimetableQuery(String studentId, String ssToken)
     {
         this.studentId = studentId;
         this.ssToken = ssToken;
         this.httpClient = new OkHttpClient.Builder()
-                .cookieJar(cookieJar)
+                .cookieJar(AuthCookieJar.getInstance())
                 .build();
     }
 
@@ -42,7 +42,7 @@ public class TimetableQuery
 
         Request request = new Request.Builder()
                 .url(queryUrl)
-                .addHeader("User-Agent", prop.getProperty(Constant.SETTING_KEY_USER_AGENT))
+                .addHeader("User-Agent", settings.getSetting(Constant.SETTING_KEY_USER_AGENT))
                 .build();
 
         String allocatedCourseJson = HttpFetcherSync.performRequest(this.httpClient, request, this.logger);
@@ -62,7 +62,7 @@ public class TimetableQuery
 
         Request request = new Request.Builder()
                 .url(queryUrl)
-                .addHeader("User-Agent", prop.getProperty(Constant.SETTING_KEY_USER_AGENT))
+                .addHeader("User-Agent", settings.getSetting(Constant.SETTING_KEY_USER_AGENT))
                 .build();
 
         String allocatedCourseJson = HttpFetcherSync.performRequest(this.httpClient, request, this.logger);
@@ -88,7 +88,7 @@ public class TimetableQuery
 
         Request request = new Request.Builder()
                 .url(queryUrl)
-                .addHeader("User-Agent", prop.getProperty(Constant.SETTING_KEY_USER_AGENT))
+                .addHeader("User-Agent", settings.getSetting(Constant.SETTING_KEY_USER_AGENT))
                 .post(formBody)
                 .build();
 
