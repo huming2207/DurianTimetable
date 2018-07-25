@@ -2,10 +2,10 @@ package portal;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import helpers.AuthCookieJar;
 import helpers.Constant;
 import helpers.HttpFetcherSync;
 import helpers.Settings;
-import okhttp3.CookieJar;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import org.slf4j.Logger;
@@ -19,15 +19,13 @@ import java.io.IOException;
 
 public class PortalQuery
 {
-    private String studentId;
     private Settings settings = Settings.getInstance();
     private Logger logger = LoggerFactory.getLogger(this.getClass());
     private OkHttpClient httpClient;
 
-    public PortalQuery(String studentId, CookieJar cookieJar)
+    public PortalQuery()
     {
-        this.studentId = studentId;
-        this.httpClient = new OkHttpClient.Builder().cookieJar(cookieJar).build();
+        this.httpClient = new OkHttpClient.Builder().cookieJar(AuthCookieJar.getInstance()).build();
     }
 
     private <T> T fetchPortalApis(String endpoint, TypeReference<T> resultType) throws IOException
@@ -46,7 +44,7 @@ public class PortalQuery
 
     public Result fetchMyExamResult() throws IOException
     {
-        return this.fetchPortalApis("/myexamresults", new TypeReference<Result>() {});
+        return this.fetchPortalApis("/myexamresults/new", new TypeReference<Result>() {});
     }
 
     public Exam fetchMyExamTimetable() throws IOException
