@@ -15,7 +15,7 @@ public class Announcement{
 	@JsonProperty("userId")
 	private String userId;
 
-	@JsonProperty("messages")
+	@JsonProperty("announcements")
 	private List<Message> messages;
 
 	@JsonProperty("responseCode")
