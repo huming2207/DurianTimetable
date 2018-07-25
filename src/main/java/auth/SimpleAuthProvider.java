@@ -50,6 +50,9 @@ public class SimpleAuthProvider
 
     public boolean performLogin(String loginPageHtml, String username, String password)
     {
+        // If the user is logged in, return true to avoid a second one
+        if(loginPageHtml.contains("Successful")) return true;
+
         // Build the request
         Request request = new Request.Builder()
                 .url(Constant.SSO_CAS_BASE_URL)
